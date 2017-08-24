@@ -1,0 +1,103 @@
+---
+title: "Final RMD"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#testing_data<-read.csv("D:/Share Folder/PACE 2nd Sem/Datawarehosue, Datamining and Data Visualization/Project Files/Sample_Prediction_data.csv",header = TRUE)
+#Prediction_OF_Crime_testdata<-testing_data
+Sample_data<-Prediction_OF_Crime_testdata[Prediction_OF_Crime_testdata$Year=="2015",]
+unique(Sample_data$Month)
+```
+
+
+```{r}
+Clean_data_Winter<-filter(Sample_data,Month==c("Jan","Feb","Dec"))
+
+Clean_data_Winter$Month<-"Winter"
+
+Clean_data_summer<-filter(Sample_data,Month==c("Jun","Jul","Aug"))
+Clean_data_summer$Month<-"Summer"
+
+Clean_data_Fall<-filter(Sample_data,Month==c("Sep","Oct","Nov"))
+Clean_data_Fall$Month<-"Fall"
+
+Clean_data_Spring<-filter(Sample_data,Month==c("Mar","Apr","May"))
+Clean_data_Spring$Month<-"Spring"
+
+View(Clean_data_Spring)
+
+Clean_data_all<-rbind(Clean_data_Winter,Clean_data_summer,Clean_data_Fall,Clean_data_Spring)
+Clean_data<-Clean_data_summer
+View(Clean_data)
+```
+
+
+
+
+```{r}
+preditive_sample<-subset(Clean_data, select = c('IUCR','Location.Description','Arrest','Beat','Weekday','Month'))
+#View(preditive_sample)
+summary(preditive_sample)
+preditive_sample$Arrest<-as.factor(preditive_sample$Arrest)
+preditive_sample$Month<-as.factor(preditive_sample$Month)
+preditive_sample$Weekday<-as.factor(preditive_sample$Weekday)
+preditive_sample$Beat<-as.factor(preditive_sample$Beat)
+preditive_sample$District<-as.factor(preditive_sample$District)
+```
+
+```{r}
+
+str(preditive_sample)
+typeof(preditive_sample$Arrest)
+is.factor(preditive_sample$Arrest)
+```
+
+
+```{r}
+label_arrest<-preditive_sample$Arrest
+View(label_arrest)
+DummyVariables<-model.matrix(Arrest~.,data = preditive_sample)
+dummy_subset<-data.frame(DummyVariables)
+
+dummy_subset$X.Intercept.<-NULL
+#dummy_subset$Weekday.6
+
+
+```
+
+
+```{r}
+set.seed(1234)
+indicies=sample(1:2, length(preditive_sample$Arrest),replace= T, prob = c(.8,.2))
+dim(dummy_subset[indicies==1,]);dim(dummy_subset)
+
+
+```
+
+
+```{r}
+training.input=dummy_subset[indicies==1,]
+testing.input=dummy_subset[indicies==2,]
+nrow(testing.input)
+training.label=label_arrest[indicies==1]
+nrow(training.label)
+testing.label=label_arrest[indicies==2]
+nrow(testing.label)
+```
+
+
+
+```{r}
+require(class)
+predictions<-knn(train=training.input, test=testing.input, cl=training.label, k=1001)
+predictions
+data.frame(predictions,testing.label)
+
+
+
+```
